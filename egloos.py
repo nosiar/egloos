@@ -1,6 +1,14 @@
 import requests
 import re
 
+TITLE=0
+CONTENT=1
+
+category_dict = {'Music':'7', 'Muse':'2', 'RATM':'9', 'SOAD':'4', 'Queen':'6',
+                 'Radiohead':'5', 'Dog Sound':'3', 'Diary':'11', 'Movie':'10',
+                 'Show':'13', 'Book':'12', 'Game':'14', '▒▒▒▒':'8',
+                 'Piano':'15'}
+
 class Egloos(object):
     def __init__(self, user, password, nick):
         self.id = id
@@ -37,7 +45,7 @@ class Egloos(object):
         return content
 
     def view_article(self, id):
-        r = self.s.get('http://dslk.egloos.com/'+str(id))
+        r = self.s.get('http://' + self.nick + '.egloos.com/'+str(id))
         html = r.text
 
         m= re.search("<h3 class=\"posttitle\">.*?<a .*?>(.*?)</a>", html)
@@ -61,6 +69,73 @@ class Egloos(object):
         date = m.group(0).strip()
 
         return Article(int(id), title, content, date)
+
+    def get_article_list_sub(self, category, page):
+        r = self.s.get("http://" + self.nick + ".egloos.com/category/"+category+"/list/"+str(page))
+        html = r.text
+
+        m = re.search("</p>\s*<div class=\"content\">(.*?)<div", html, re.S)
+        articles = [x.strip() for x in m.group(1).split("<br/>")[:-1]]
+        articles = [Article(int(re.search("<a href=\"/(\d+)\">", x, re.S).group(1)),
+                            re.search("<a href=\"/\d+\">(.*?)</a>", x, re.S).group(1),
+                            None,
+                            re.search("archivedate\">(.*?)<", x, re.S).group(1)) for x in articles]
+        for a in articles:
+            a.content = self.get_content(a.id)
+        return articles
+
+    def get_article_list(self, category, regex, option, flags, fast_print=False):
+        page = 1
+        articles = []
+
+        articles_sub = self.get_article_list_sub(category, page)
+        if fast_print:
+            for a in self.filter_article(articles_sub, regex, option, flags):
+                print(a)
+        articles = articles + articles_sub
+        page += 1
+        while len(articles_sub) == 50:
+            articles_sub = self.get_article_list_sub(category, page)
+        if fast_print:
+            for a in self.filter_article(articles_sub, regex, option, flags):
+                print(a)
+            articles = articles + articles_sub
+            page += 1
+        return articles
+
+    def filter_article(self, articles, regex, option=CONTENT, flags=0):
+        if option == TITLE:
+            return [a for a in articles if re.search(regex, a.title, flags)]
+        elif option == CONTENT:
+            return [a for a in articles if re.search(regex, a.content, flags)]
+
+    def write_article(self, category, title, content):
+        values = {'eid':'e0080700',
+                  'uid':'yourface',
+                  'cgiid':category_dict[category],
+                  'cgname':category,
+                  'subject':title,
+                  'content':content,
+                  'contentlength':len(content),
+                  'moresubject':'',
+                  'morecontent':'',
+                  'openflag':'3',
+                  'cmltflag':'1',
+                  'trbflag':'1',
+                  'e4cflag':-1,
+                  'postdate':'',
+                  'editor_opt':'0',
+                  'pstdate':'0',
+                  'posttag':'',
+                  'posttheme':'',
+                  'old_posttag':'',
+                  'allowHotTag':0,
+                  'ismenu':'0'}
+        r = self.s.post('http://www.egloos.com/egloo/post_insert_exec.php',
+                data=values)
+
+        return r.text
+
 
 class Article(object):
     def __init__(self, id, title, content, date):
