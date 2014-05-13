@@ -4,12 +4,15 @@ import re
 TITLE=0
 CONTENT=1
 
-category_dict = {'Music':'7', 'Muse':'2', 'RATM':'9', 'SOAD':'4', 'Queen':'6',
-                 'Radiohead':'5', 'Dog Sound':'3', 'Diary':'11', 'Movie':'10',
-                 'Show':'13', 'Book':'12', 'Game':'14', '▒▒▒▒':'8',
-                 'Piano':'15'}
+category_dict = {
+    'Music':'7', 'Muse':'2', 'RATM':'9', 'SOAD':'4', 'Queen':'6',
+    'Radiohead':'5', 'Dog Sound':'3', 'Diary':'11', 'Movie':'10',
+    'Show':'13', 'Book':'12', 'Game':'14', '▒▒▒▒':'8', 'Piano':'15'
+}
+
 
 class Egloos(object):
+
     def __init__(self, user, password, nick):
         self.id = id
         self.user = user
@@ -71,7 +74,8 @@ class Egloos(object):
         return Article(int(id), title, content, date)
 
     def get_article_list_sub(self, category, page):
-        r = self.s.get("http://" + self.nick + ".egloos.com/category/"+category+"/list/"+str(page))
+        r = self.s.get("http://" + self.nick +
+                       ".egloos.com/category/"+category+"/list/"+str(page))
         html = r.text
 
         m = re.search("</p>\s*<div class=\"content\">(.*?)<div", html, re.S)
@@ -84,7 +88,8 @@ class Egloos(object):
             a.content = self.get_content(a.id)
         return articles
 
-    def get_article_list(self, category, regex, option, flags, fast_print=False):
+    def get_article_list(self, category, regex,
+                         option, flags, fast_print=False):
         page = 1
         articles = []
 
@@ -132,12 +137,13 @@ class Egloos(object):
                   'allowHotTag':0,
                   'ismenu':'0'}
         r = self.s.post('http://www.egloos.com/egloo/post_insert_exec.php',
-                data=values)
+                        data=values)
 
         return r.text
 
 
 class Article(object):
+
     def __init__(self, id, title, content, date):
         self.id = id
         self.title = title
