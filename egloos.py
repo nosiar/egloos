@@ -7,7 +7,7 @@ CONTENT=1
 category_dict = {
     'Music':'7', 'Muse':'2', 'RATM':'9', 'SOAD':'4', 'Queen':'6',
     'Radiohead':'5', 'Dog Sound':'3', 'Diary':'11', 'Movie':'10',
-    'Show':'13', 'Book':'12', 'Game':'14', '▒▒▒▒':'8', 'Piano':'15'
+    'Show':'13', 'Book':'12', 'Game':'14', '文化':'8', 'Piano':'15'
 }
 
 
